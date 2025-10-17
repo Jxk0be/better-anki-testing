@@ -9,11 +9,12 @@
         <q-input
           v-model="cardTitle"
           label="Front (Question/Term)"
+          type="textarea"
           outlined
           dark
           color="purple-4"
+          rows="5"
           :rules="[(val) => !!val || 'Front is required']"
-          @keyup.enter="handleAdd"
           autofocus
         />
 

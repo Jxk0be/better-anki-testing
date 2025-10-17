@@ -77,6 +77,14 @@
             :loading="unpublishing === deck.id"
           />
           <q-btn
+            v-else-if="isAlreadyImported(deck)"
+            unelevated
+            class="imported-btn"
+            icon="check_circle"
+            label="Already Imported"
+            disable
+          />
+          <q-btn
             v-else
             unelevated
             class="import-btn"
@@ -112,6 +120,8 @@ const unpublishing = ref<string | null>(null)
 const showMyDecksOnly = ref(false)
 
 onMounted(async () => {
+  // Load user's decks first to check for already imported decks
+  await deckStore.loadDecks()
   await loadCommunityDecks()
 })
 
@@ -124,6 +134,13 @@ const filteredDecks = computed(() => {
 
 const isMyDeck = (deck: CommunityDeck): boolean => {
   return authStore.user !== null && deck.authorId === authStore.user.uid
+}
+
+const isAlreadyImported = (deck: CommunityDeck): boolean => {
+  // Check if user has already imported this deck by looking for originalDeckId
+  return deckStore.decks.some(
+    userDeck => userDeck.isImported && userDeck.originalDeckId === deck.originalDeckId
+  )
 }
 
 const loadCommunityDecks = async () => {
@@ -383,6 +400,16 @@ const handleUnpublish = async (deck: CommunityDeck) => {
   font-weight: 600;
   text-transform: none;
   letter-spacing: 0;
+}
+
+.imported-btn {
+  width: 100%;
+  background: rgba(100, 116, 139, 0.3);
+  color: #94a3b8;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  border: 1px solid rgba(100, 116, 139, 0.5);
 }
 
 @media (max-width: 768px) {

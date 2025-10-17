@@ -40,6 +40,15 @@
             <q-tooltip>{{ isPublished ? 'Published to Community' : 'Publish to Community' }}</q-tooltip>
           </q-btn>
           <q-btn
+            flat
+            dense
+            icon="calendar_month"
+            color="white"
+            @click="$emit('openCalendar')"
+          >
+            <q-tooltip>Weekly Calendar</q-tooltip>
+          </q-btn>
+          <q-btn
             unelevated
             class="add-card-btn"
             icon="add"
@@ -120,6 +129,15 @@
               <q-btn
                 flat
                 dense
+                icon="edit"
+                color="primary"
+                @click="openEditDialog(card)"
+              >
+                <q-tooltip>Edit</q-tooltip>
+              </q-btn>
+              <q-btn
+                flat
+                dense
                 icon="delete"
                 color="negative"
                 @click="confirmDeleteCard(card)"
@@ -138,6 +156,13 @@
       v-model="showAddCardDialog"
       :deck-id="deckStore.currentDeck.id"
     />
+
+    <!-- Edit Card Dialog -->
+    <EditCardDialog
+      v-if="cardToEdit"
+      v-model="showEditCardDialog"
+      :card="cardToEdit"
+    />
   </div>
 </template>
 
@@ -150,6 +175,7 @@ import { isCardDue, formatDueTime } from '../services/fsrsService'
 import { publishDeckToCommunity, unpublishDeck, isDeckPublished } from '../services/communityService'
 import { Notify, Dialog } from 'quasar'
 import AddCardDialog from './AddCardDialog.vue'
+import EditCardDialog from './EditCardDialog.vue'
 
 const props = defineProps<{
   deckId: string
@@ -158,11 +184,14 @@ const props = defineProps<{
 const emit = defineEmits<{
   back: []
   startStudy: [cards: Card[]]
+  openCalendar: []
 }>()
 
 const deckStore = useDeckStore()
 const authStore = useAuthStore()
 const showAddCardDialog = ref(false)
+const showEditCardDialog = ref(false)
+const cardToEdit = ref<Card | null>(null)
 const isPublished = ref(false)
 const publishing = ref(false)
 
@@ -235,6 +264,11 @@ const togglePublish = async () => {
 
 const getCardStatus = (card: Card): string => {
   return formatDueTime(card.fsrsData)
+}
+
+const openEditDialog = (card: Card) => {
+  cardToEdit.value = card
+  showEditCardDialog.value = true
 }
 
 const confirmDeleteCard = (card: Card) => {
