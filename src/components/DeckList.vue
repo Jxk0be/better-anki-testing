@@ -4,10 +4,10 @@
       <h2 class="deck-list-title">My Decks</h2>
       <div class="header-actions">
         <q-btn
-          flat
+          unelevated
+          class="community-btn"
           icon="explore"
           label="Community Decks"
-          color="white"
           @click="$emit('browseCommunity')"
         />
         <q-btn
@@ -43,7 +43,7 @@
     <!-- Deck grid -->
     <div v-else class="deck-grid">
       <div v-for="deck in deckStore.decks" :key="deck.id" class="deck-card">
-        <div class="deck-card-content">
+        <div class="deck-card-content" @click="openDeck(deck)">
           <div class="deck-icon">
             <q-icon name="style" size="32px" />
           </div>
@@ -67,18 +67,9 @@
           <q-btn
             flat
             dense
-            icon="play_arrow"
-            color="primary"
-            @click="openDeck(deck)"
-          >
-            <q-tooltip>Study</q-tooltip>
-          </q-btn>
-          <q-btn
-            flat
-            dense
             icon="edit"
             color="grey-7"
-            @click="editDeck(deck)"
+            @click.stop="editDeck(deck)"
           >
             <q-tooltip>Edit</q-tooltip>
           </q-btn>
@@ -87,7 +78,7 @@
             dense
             icon="delete"
             color="negative"
-            @click="confirmDeleteDeck(deck)"
+            @click.stop="confirmDeleteDeck(deck)"
           >
             <q-tooltip>Delete</q-tooltip>
           </q-btn>
@@ -186,6 +177,23 @@ const confirmDeleteDeck = (deck: Deck) => {
   margin: 0;
 }
 
+.community-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  font-weight: 600;
+  padding: 0.5rem 1.5rem;
+  border-radius: 8px;
+  text-transform: none;
+  letter-spacing: 0;
+  transition: all 0.3s ease;
+}
+
+.community-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
 .create-deck-btn {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
@@ -242,6 +250,7 @@ const confirmDeleteDeck = (deck: Deck) => {
 
 .deck-card-content {
   flex: 1;
+  cursor: pointer;
 }
 
 .deck-icon {
@@ -317,6 +326,17 @@ const confirmDeleteDeck = (deck: Deck) => {
     flex-direction: column;
     align-items: flex-start;
     gap: 1rem;
+  }
+
+  .header-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .community-btn,
+  .create-deck-btn {
+    width: 100%;
+    justify-content: center;
   }
 
   .deck-grid {

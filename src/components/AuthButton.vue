@@ -42,10 +42,12 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { Notify } from 'quasar'
 
 const authStore = useAuthStore()
+const router = useRouter()
 const signingIn = ref(false)
 const signingOut = ref(false)
 
@@ -73,6 +75,8 @@ const handleSignOut = async () => {
   try {
     signingOut.value = true
     await authStore.signOut()
+    // Navigate to home route after logout
+    router.push({ name: 'home' })
     Notify.create({
       type: 'positive',
       message: 'Successfully signed out!',

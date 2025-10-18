@@ -12,6 +12,9 @@
 
     <q-page-container>
       <q-page>
+        <!-- Router view for URL management -->
+        <router-view v-show="false" />
+
         <!-- Show landing page for non-authenticated users -->
         <LandingPage v-if="!authStore.isAuthenticated && !authStore.loading" />
 

@@ -101,13 +101,27 @@ export const useDeckStore = defineStore('deck', () => {
 
   // Load a specific deck and its cards
   const loadDeck = async (deckId: string) => {
+    if (!authStore.user) {
+      error.value = 'No user logged in'
+      throw new Error('No user logged in')
+    }
+
     try {
       loading.value = true
       error.value = null
       const deck = await getDeck(deckId)
+
       if (!deck) {
+        error.value = 'Deck not found'
         throw new Error('Deck not found')
       }
+
+      // Authorization check: only the deck owner can access it
+      if (deck.userId !== authStore.user.uid) {
+        error.value = 'Unauthorized access'
+        throw new Error('Unauthorized access')
+      }
+
       currentDeck.value = deck
       currentDeckCards.value = await getCards(deckId)
     } catch (err) {

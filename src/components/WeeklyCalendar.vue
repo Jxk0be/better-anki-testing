@@ -5,6 +5,30 @@
       <q-spinner color="primary" size="48px" />
     </div>
 
+    <!-- Error state (unauthorized or not found) -->
+    <div v-else-if="deckStore.error" class="error-state">
+      <q-icon
+        :name="deckStore.error === 'Unauthorized access' ? 'lock' : 'error_outline'"
+        size="80px"
+        :color="deckStore.error === 'Unauthorized access' ? 'red' : 'orange'"
+      />
+      <h3 class="error-title">
+        {{ deckStore.error === 'Unauthorized access' ? 'Access Denied' : 'Deck Not Found' }}
+      </h3>
+      <p class="error-description">
+        {{ deckStore.error === 'Unauthorized access'
+          ? 'You do not have permission to view this deck. This deck belongs to another user.'
+          : 'This deck does not exist or has been deleted.' }}
+      </p>
+      <q-btn
+        unelevated
+        class="back-btn"
+        icon="arrow_back"
+        label="Back to My Decks"
+        @click="$emit('back')"
+      />
+    </div>
+
     <!-- Calendar loaded -->
     <div v-else-if="deckStore.currentDeck">
       <!-- Header -->
@@ -77,6 +101,13 @@
             <div class="stat-label">Due Today</div>
           </div>
         </div>
+        <div class="stat-card">
+          <q-icon name="warning" size="24px" color="red-4" />
+          <div class="stat-info">
+            <div class="stat-value">{{ pastDueCount }}</div>
+            <div class="stat-label">Past Due</div>
+          </div>
+        </div>
       </div>
 
       <!-- Calendar grid with navigation arrows -->
@@ -119,9 +150,12 @@
 
           <div class="day-count">
             <q-badge
-              :color="day.cards.length > 0 ? 'orange' : 'grey-7'"
+              :color="getDayBadgeColor(day)"
               :label="day.cards.length === 0 ? 'None' : `${day.cards.length} card${day.cards.length > 1 ? 's' : ''}`"
             />
+            <div v-if="isPast(day.date) && day.cards.length > 0" class="past-due-label">
+              Past Due
+            </div>
           </div>
 
           <!-- Cards for this day -->
@@ -130,6 +164,7 @@
               v-for="card in day.cards"
               :key="card.id"
               class="calendar-card-item"
+              :class="{ 'is-past-due': isPast(day.date) }"
               @click="$emit('startStudy', card)"
             >
               <q-tooltip
@@ -270,6 +305,14 @@ const dueTodayCount = computed(() => {
   return todayDay ? todayDay.cards.length : 0
 })
 
+// Past due count (cards due before today)
+const pastDueCount = computed(() => {
+  const today = getStartOfDay(new Date())
+  return weekDays.value
+    .filter((day) => getStartOfDay(day.date).getTime() < today.getTime())
+    .reduce((sum, day) => sum + day.cards.length, 0)
+})
+
 // Check if date is today
 function isToday(date: Date): boolean {
   const today = getStartOfDay(new Date())
@@ -280,6 +323,19 @@ function isToday(date: Date): boolean {
 function isPast(date: Date): boolean {
   const today = getStartOfDay(new Date())
   return getStartOfDay(date).getTime() < today.getTime()
+}
+
+// Get badge color for a day
+function getDayBadgeColor(day: DayInfo): string {
+  if (day.cards.length === 0) {
+    return 'grey-7'  // No cards
+  } else if (isPast(day.date)) {
+    return 'red'  // Past due
+  } else if (isToday(day.date)) {
+    return 'orange'  // Due today
+  } else {
+    return 'blue-grey-7'  // Future days
+  }
 }
 
 // Format card time
@@ -444,6 +500,11 @@ function goToCurrentWeek() {
   opacity: 0.7;
 }
 
+.day-card.is-past:has(.day-cards) {
+  border-color: rgba(239, 68, 68, 0.3);
+  opacity: 1;
+}
+
 .day-header {
   margin-bottom: 1rem;
   padding-bottom: 0.75rem;
@@ -466,6 +527,15 @@ function goToCurrentWeek() {
 
 .day-count {
   margin-bottom: 1rem;
+}
+
+.past-due-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #ef4444;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 0.25rem;
 }
 
 .day-cards {
@@ -495,6 +565,16 @@ function goToCurrentWeek() {
 
 .calendar-card-item:hover .play-icon {
   opacity: 1;
+}
+
+.calendar-card-item.is-past-due {
+  border-color: rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.calendar-card-item.is-past-due:hover {
+  border-color: rgba(239, 68, 68, 0.5);
+  background: rgba(239, 68, 68, 0.1);
 }
 
 .card-title {
@@ -537,6 +617,44 @@ function goToCurrentWeek() {
 .no-cards-text {
   font-size: 0.75rem;
   color: #94a3b8;
+}
+
+.error-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.error-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: white;
+  margin: 1rem 0 0.5rem;
+}
+
+.error-description {
+  font-size: 1rem;
+  color: #94a3b8;
+  margin-bottom: 2rem;
+  max-width: 500px;
+  line-height: 1.6;
+}
+
+.back-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-weight: 600;
+  padding: 0.5rem 1.5rem;
+  border-radius: 8px;
+  text-transform: none;
+  letter-spacing: 0;
 }
 
 .empty-state {

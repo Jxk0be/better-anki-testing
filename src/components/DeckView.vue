@@ -5,6 +5,30 @@
       <q-spinner color="primary" size="48px" />
     </div>
 
+    <!-- Error state (unauthorized or not found) -->
+    <div v-else-if="deckStore.error" class="error-state">
+      <q-icon
+        :name="deckStore.error === 'Unauthorized access' ? 'lock' : 'error_outline'"
+        size="80px"
+        :color="deckStore.error === 'Unauthorized access' ? 'red' : 'orange'"
+      />
+      <h3 class="error-title">
+        {{ deckStore.error === 'Unauthorized access' ? 'Access Denied' : 'Deck Not Found' }}
+      </h3>
+      <p class="error-description">
+        {{ deckStore.error === 'Unauthorized access'
+          ? 'You do not have permission to view this deck. This deck belongs to another user.'
+          : 'This deck does not exist or has been deleted.' }}
+      </p>
+      <q-btn
+        unelevated
+        class="back-btn"
+        icon="arrow_back"
+        label="Back to My Decks"
+        @click="$emit('back')"
+      />
+    </div>
+
     <!-- Deck loaded -->
     <div v-else-if="deckStore.currentDeck">
       <!-- Header -->
@@ -74,6 +98,13 @@
             <div class="stat-label">Due Now</div>
           </div>
         </div>
+        <div class="stat-card">
+          <q-icon name="warning" size="24px" color="red-4" />
+          <div class="stat-info">
+            <div class="stat-value">{{ pastDueCardsCount }}</div>
+            <div class="stat-label">Past Due</div>
+          </div>
+        </div>
       </div>
 
       <!-- Study Button -->
@@ -105,7 +136,12 @@
 
       <!-- Cards list -->
       <div v-else class="cards-list">
-        <div v-for="card in deckStore.currentDeckCards" :key="card.id" class="card-item">
+        <div
+          v-for="card in deckStore.currentDeckCards"
+          :key="card.id"
+          class="card-item"
+          :class="{ 'is-past-due': isCardPastDue(card) }"
+        >
           <div class="card-content">
             <div class="card-front">
               <div class="card-label">Front</div>
@@ -121,8 +157,15 @@
           <div class="card-meta">
             <div class="card-status">
               <q-badge
-                :color="isCardDue(card) ? 'orange' : 'green'"
+                :color="getCardBadgeColor(card)"
                 :label="getCardStatus(card)"
+              />
+              <q-badge
+                v-if="isCardPastDue(card)"
+                color="red-8"
+                text-color="white"
+                label="PAST DUE"
+                class="past-due-badge"
               />
             </div>
             <div class="card-actions">
@@ -196,7 +239,26 @@ const isPublished = ref(false)
 const publishing = ref(false)
 
 const dueCardsCount = computed(() => {
-  return deckStore.currentDeckCards.filter((card) => isCardDue(card.fsrsData)).length
+  const todayStart = new Date()
+  todayStart.setHours(0, 0, 0, 0)
+  const todayEnd = new Date()
+  todayEnd.setHours(23, 59, 59, 999)
+
+  return deckStore.currentDeckCards.filter((card) => {
+    const dueDate = new Date(card.fsrsData.due)
+    // Due today: dueDate is today (between start and end of today)
+    return dueDate >= todayStart && dueDate <= todayEnd
+  }).length
+})
+
+const pastDueCardsCount = computed(() => {
+  const todayStart = new Date()
+  todayStart.setHours(0, 0, 0, 0)
+  return deckStore.currentDeckCards.filter((card) => {
+    const dueDate = new Date(card.fsrsData.due)
+    // Past due: dueDate is before today
+    return dueDate < todayStart
+  }).length
 })
 
 onMounted(async () => {
@@ -264,6 +326,34 @@ const togglePublish = async () => {
 
 const getCardStatus = (card: Card): string => {
   return formatDueTime(card.fsrsData)
+}
+
+const isCardPastDue = (card: Card): boolean => {
+  const todayStart = new Date()
+  todayStart.setHours(0, 0, 0, 0)
+  const dueDate = new Date(card.fsrsData.due)
+  // Past due: before today
+  return dueDate < todayStart
+}
+
+const isCardDueToday = (card: Card): boolean => {
+  const todayStart = new Date()
+  todayStart.setHours(0, 0, 0, 0)
+  const todayEnd = new Date()
+  todayEnd.setHours(23, 59, 59, 999)
+  const dueDate = new Date(card.fsrsData.due)
+  // Due today: between start and end of today
+  return dueDate >= todayStart && dueDate <= todayEnd
+}
+
+const getCardBadgeColor = (card: Card): string => {
+  if (isCardPastDue(card)) {
+    return 'red'  // Past due (before today)
+  } else if (isCardDueToday(card)) {
+    return 'orange'  // Due today
+  } else {
+    return 'green'  // Not yet due (future)
+  }
 }
 
 const openEditDialog = (card: Card) => {
@@ -401,6 +491,44 @@ const confirmDeleteCard = (card: Card) => {
   margin-top: 0.25rem;
 }
 
+.error-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.error-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: white;
+  margin: 1rem 0 0.5rem;
+}
+
+.error-description {
+  font-size: 1rem;
+  color: #94a3b8;
+  margin-bottom: 2rem;
+  max-width: 500px;
+  line-height: 1.6;
+}
+
+.back-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-weight: 600;
+  padding: 0.5rem 1.5rem;
+  border-radius: 8px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
 .empty-state {
   text-align: center;
   padding: 4rem 2rem;
@@ -439,6 +567,16 @@ const confirmDeleteCard = (card: Card) => {
 .card-item:hover {
   background: rgba(255, 255, 255, 0.05);
   border-color: rgba(102, 126, 234, 0.3);
+}
+
+.card-item.is-past-due {
+  border-color: rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 0.03);
+}
+
+.card-item.is-past-due:hover {
+  background: rgba(239, 68, 68, 0.05);
+  border-color: rgba(239, 68, 68, 0.5);
 }
 
 .card-content {
@@ -485,6 +623,14 @@ const confirmDeleteCard = (card: Card) => {
 .card-status {
   display: flex;
   gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.past-due-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.25rem 0.5rem;
 }
 
 .card-actions {
