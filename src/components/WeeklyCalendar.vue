@@ -182,7 +182,7 @@ const emit = defineEmits<{
 }>()
 
 const deckStore = useDeckStore()
-const currentWeekStart = ref<Date>(getStartOfWeek(new Date()))
+const currentWeekStart = ref<Date>(getStartOfDay(new Date()))
 
 interface DayInfo {
   date: Date
@@ -227,7 +227,7 @@ const weekRange = computed(() => {
   return `${start.toLocaleDateString('en-US', options)} - ${end.toLocaleDateString('en-US', options)}`
 })
 
-// Get cards due in the current week
+// Get cards due in the next 7 days starting from currentWeekStart
 const weekDays = computed((): DayInfo[] => {
   const days: DayInfo[] = []
   const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
@@ -302,7 +302,7 @@ function nextWeek() {
 }
 
 function goToCurrentWeek() {
-  currentWeekStart.value = getStartOfWeek(new Date())
+  currentWeekStart.value = getStartOfDay(new Date())
 }
 </script>
 

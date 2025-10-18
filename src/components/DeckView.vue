@@ -40,13 +40,13 @@
             <q-tooltip>{{ isPublished ? 'Published to Community' : 'Publish to Community' }}</q-tooltip>
           </q-btn>
           <q-btn
-            flat
-            dense
-            icon="calendar_month"
-            color="white"
+            unelevated
+            class="calendar-btn"
+            icon="event_note"
+            label="Weekly View"
             @click="$emit('openCalendar')"
           >
-            <q-tooltip>Weekly Calendar</q-tooltip>
+            <q-tooltip>View 7-day calendar</q-tooltip>
           </q-btn>
           <q-btn
             unelevated
@@ -341,6 +341,23 @@ const confirmDeleteCard = (card: Card) => {
   gap: 0.5rem;
 }
 
+.calendar-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+  font-weight: 600;
+  padding: 0.5rem 1.5rem;
+  border-radius: 8px;
+  text-transform: none;
+  letter-spacing: 0;
+  transition: all 0.3s ease;
+}
+
+.calendar-btn:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
 .add-card-btn {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
@@ -504,8 +521,15 @@ const confirmDeleteCard = (card: Card) => {
     width: 100%;
   }
 
+  .header-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .calendar-btn,
   .add-card-btn {
     width: 100%;
+    justify-content: center;
   }
 
   .card-content {

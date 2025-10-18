@@ -103,6 +103,19 @@ const handleStartStudyFromCalendar = (card: Card) => {
   studyCards.value = [card]
   showCalendar.value = false
 }
+
+// Reset to deck list view (exposed for parent components)
+const resetToHome = () => {
+  selectedDeckId.value = null
+  studyCards.value = null
+  showCommunity.value = false
+  showCalendar.value = false
+}
+
+// Expose resetToHome so parent can call it
+defineExpose({
+  resetToHome
+})
 </script>
 
 <style scoped>
