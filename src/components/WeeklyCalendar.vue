@@ -308,9 +308,11 @@ function goToCurrentWeek() {
 
 <style scoped>
 .weekly-calendar-container {
-  max-width: 1400px;
+  max-width: 1300px;
   margin: 0 auto;
   padding: 2rem;
+  padding-left: calc(2rem + 50px);
+  padding-right: calc(2rem + 50px);
 }
 
 .calendar-header {
@@ -371,11 +373,11 @@ function goToCurrentWeek() {
 }
 
 .week-nav-left {
-  left: -1.5rem;
+  left: calc(-1.5rem - 50px);
 }
 
 .week-nav-right {
-  right: -1.5rem;
+  right: calc(-1.5rem - 50px);
 }
 
 .week-stats {
